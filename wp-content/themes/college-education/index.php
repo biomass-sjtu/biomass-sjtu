@@ -8,7 +8,7 @@ if( $pagetitle == 1 ) : ?>
 <div class="heading-wrap blog-heading-wrap">
     <div class="heading-layer">
         <div class="heading-title">
-            <h4><?php esc_html_e('Blog ','college-education'); ?></h4>
+            <h4><?php esc_html_e('All Posts','college-education'); ?></h4>
         </div>
     </div>
 </div> 

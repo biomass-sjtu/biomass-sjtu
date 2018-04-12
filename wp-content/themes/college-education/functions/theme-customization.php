@@ -3,11 +3,15 @@
 * college-education Customization options
 */
 
-if ( ! function_exists( 'college_education_field_sanitize_checkbox' ) ) :
-  function college_education_field_sanitize_checkbox( $checked ) {
-    return ( ( isset( $checked ) && true === $checked ) ? true : false );
+//get categories
+function college_education_menu_list(){
+  $menus = get_terms( 'nav_menu', array( 'hide_empty' => true ) );
+  $college_education_menu_list[''] = __('Select','college-education');
+  foreach ( $menus as $menu ):
+    $college_education_menu_list[$menu->name] = $menu->name;
+  endforeach;
+  return $college_education_menu_list;
 }
-endif;
 
 function college_education_customize_register( $wp_customize ) {
   $wp_customize->add_panel(
@@ -24,7 +28,7 @@ function college_education_customize_register( $wp_customize ) {
     array(
       'title' => __('Social Accounts', 'college-education'),
       'priority' => 120,
-      'description' => __( 'In first input box, you need to add FONT AWESOME shortcode which you can find ' ,  'college-education').'<a target="_blank" href="'.esc_url('https://fortawesome.github.io/Font-Awesome/icons/').'">'.__('here' ,  'college-education').'</a>'.__(' and in second input box, you need to add your social media profile URL.', 'college-education').'<br />'.__(' Enter the URL of your social accounts. Leave it empty to hide the icon.' ,  'college-education'),
+      'description' => balanceTags( 'In first input box, you need to add FONT AWESOME shortcode which you can find <a target="_blank" href="https://fortawesome.github.io/Font-Awesome/icons/">here</a> and in second input box, you need to add your social media profile URL.<br /> Enter the URL of your social accounts. Leave it empty to hide the icon.' , true),
       'panel' => 'footer'
     )
   );
@@ -32,7 +36,6 @@ function college_education_customize_register( $wp_customize ) {
   $wp_customize->get_section('header_image')->panel = 'general';
   $wp_customize->get_section('title_tagline')->title = __('Header & Logo','college-education');
   $wp_customize->get_section('static_front_page')->panel = 'general';
-
 
 $CollegeEducationSocialIcon = array();
   for($i=1;$i <= 5;$i++):  
@@ -82,7 +85,7 @@ $CollegeEducationSocialIcon = array();
     $wp_customize->add_control(
       $CollegeEducationSocialIconLinks['slug'],
       array(
-        'type'  => 'url',
+        'type'  => 'text',
         'section' => 'CollegeEducationSocialLinks',
         'priority' => $CollegeEducationSocialIconLinks['priority'],
         'input_attrs' => array( 'placeholder' => esc_html__('Enter URL','college-education')),
@@ -118,10 +121,9 @@ $wp_customize->add_control( new WP_Customize_Cropped_Image_Control( $wp_customiz
     'priority'    => 48,
     'default-image' => '',
 ) ) );
-
 $wp_customize->add_setting('theme_header_fix', array(
         'default' => false,  
-        'sanitize_callback' => 'college_education_field_sanitize_checkbox',
+        'sanitize_callback' => 'sanitize_text_field',
 ));
 $wp_customize->add_control('theme_header_fix', array(
     'label'   => esc_html__('Header Fix','college-education'),
@@ -143,7 +145,7 @@ $wp_customize->add_control(
   array(
     'section' => 'title_tagline',
     'label'      => __('Enter Logo Size', 'college-education'),
-    'description' => __("Use if you want to increase or decrease logo size (optional) Don't enter `px` in the string. e.g. 20 (default: 10px)",'college-education'),
+    'description' => __("Use if you want to increase or decrease logo size (optional) Don't include `px` in the string. e.g. 20 (default: 10px)",'college-education'),
     'type'       => 'text',
     'priority'    => 50,
     )
@@ -178,7 +180,7 @@ $wp_customize->add_control(
 );
 
 $wp_customize->add_setting( 'customPreloader', array(
-    'sanitize_callback' => 'esc_url_raw',
+    'sanitize_callback' => 'absint',
     'capability'     => 'edit_theme_options',
     'priority' => 40,
 ));
@@ -190,7 +192,7 @@ $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, 'cust
 ) ) );
 
 $wp_customize->add_section( 'homepageSection' , array(
-    'title'       => __( 'Menu Settings', 'college-education' ),
+    'title'       => __( 'Home Settings', 'college-education' ),
     'priority'    => 40,
     'capability'     => 'edit_theme_options',
     'panel' => 'general'
@@ -221,7 +223,22 @@ $wp_customize->add_setting( 'pagetitle', array(
 ));
 
 $wp_customize->add_control( 'pagetitle', array(
-    'label'    => __( 'Front Page Title', 'college-education' ),
+    'label'    => __( 'Home Page Title', 'college-education' ),
+    'section'  => 'homepageSection',
+    'type'       => 'select',    
+    'choices' => array(
+      "0"   => esc_html__( "Hide", 'college-education' ),
+      "1"   => esc_html__( "Show", 'college-education' ),
+    ),
+));
+$wp_customize->add_setting( 'singlepagetitle', array(
+    'capability'     => 'edit_theme_options',
+    'priority' => 41,
+    'default' => '1',
+    'sanitize_callback' => 'sanitize_text_field',
+));
+$wp_customize->add_control( 'singlepagetitle', array(
+    'label'    => __( 'Single Page & Post Title', 'college-education' ),
     'section'  => 'homepageSection',
     'type'       => 'select',    
     'choices' => array(
@@ -233,7 +250,7 @@ $wp_customize->add_control( 'pagetitle', array(
 $wp_customize->add_section( 'animationSection' , array(
     'title'       => __( 'Animation', 'college-education' ),
     'priority'    => 50,
-    'description' => __( 'For more information Click' ,  'college-education').'<a target="_blank" href="'.esc_url('https://daneden.github.io/animate.css/').'">'.__('here' ,  'college-education').'</a> '.__('to find other animation effects.' , 'college-education'),
+    'description' => balanceTags( 'For more information Click <a target="_blank" href="https://daneden.github.io/animate.css/">here</a> to find other animation effects.' , true),
     'capability'     => 'edit_theme_options',
     'panel' => 'general'
 ) );
@@ -259,7 +276,7 @@ $wp_customize->add_control( 'animation', array(
 $wp_customize->add_setting(
     'themeColor',
     array(
-        'default' => '#c1331b',
+        'default' => '#f1d927',
         'capability'     => 'edit_theme_options',
         'sanitize_callback' => 'sanitize_hex_color',
     )
@@ -398,7 +415,7 @@ $wp_customize->add_control(
 $wp_customize->add_setting(
   'bodyTextColor',
   array(
-      'default' => '#071414',
+      'default' => '#424242',
       'capability'     => 'edit_theme_options',
       'sanitize_callback' => 'sanitize_hex_color',
     )
@@ -418,7 +435,7 @@ $wp_customize->add_control(
 $wp_customize->add_setting(
   'footerBackgroundColor',
   array(
-      'default' => '#f9f5f1',
+      'default' => '#ffffff',
       'capability'     => 'edit_theme_options',
       'sanitize_callback' => 'sanitize_hex_color',
     )
@@ -478,7 +495,7 @@ $wp_customize->add_control(
 $wp_customize->add_setting(
   'footerLinkHoverColor',
   array(
-      'default' => '#c1331b',
+      'default' => '#f1d927',
       'capability'     => 'edit_theme_options',
       'sanitize_callback' => 'sanitize_hex_color',
     )
@@ -613,7 +630,7 @@ $wp_customize->add_setting(
     array(
         'default' => '150',
         'capability'     => 'edit_theme_options',
-        'sanitize_callback' => 'sanitize_text_field',
+        'sanitize_callback' => 'absint',
     )
 );
 $wp_customize->add_control(
@@ -665,7 +682,7 @@ $wp_customize->add_section( 'footerWidgetArea' , array(
 
 $wp_customize->add_section( 'footerSocialSection' , array(
     'title'       => __( 'Social Settings', 'college-education' ),
-    'description' => __( 'In first input box, you need to add FONT AWESOME shortcode which you can find ' , 'college-education').'<a target="_blank" href="'.esc_url('https://fortawesome.github.io/Font-Awesome/icons/').'">'.__('here' , 'college-education').'</a>'.__('and in second input box, you need to add your social media profile URL.' , 'college-education'),
+    'description' => balanceTags( 'In first input box, you need to add FONT AWESOME shortcode which you can find <a target="_blank" href="https://fortawesome.github.io/Font-Awesome/icons/">here</a> and in second input box, you need to add your social media profile URL.' , true),
     'priority'    => 135,
     'capability'     => 'edit_theme_options',
     'panel' => 'footer'
@@ -747,31 +764,26 @@ function college_education_custom_css(){
   $custom_css='';
 
   $custom_css.="body{
-      background: ".esc_attr(get_theme_mod('bodyBackgroundColor', '#ffffff')).";
+      background: ".get_theme_mod('bodyBackgroundColor', '#ffffff').";
     }
     .navbar {
-      background: ".esc_attr(get_theme_mod('menuBackgroundColor', 'transparent')).";
+      background: ".get_theme_mod('menuBackgroundColor', 'transparent').";
     }
-    .college-education-fixed-top,.college-education-fixed-top #cssmenu ul.sub-menu{
-      background-color: ".esc_attr(get_theme_mod('menuBackgroundColor','transparent')).";
-    }
-    #top-menu ul ul li a{
-      background-color: ".esc_attr(get_theme_mod('themeColor','#c1331b')).";
-    }
-    .fixed-header #top-menu ul ul li a{
-      background-color: ".esc_attr(get_theme_mod('menuBackgroundColorScroll','#fff')).";
-    }
-    .fixed-header,.fixed-header #cssmenu ul.sub-menu,.fixed-header #top-menu ul{
-      background-color: ".esc_attr(get_theme_mod('menuBackgroundColorScroll','#fff')).";
+    .college-education-fixed-top{
+      background-color: ".get_theme_mod('menuBackgroundColor','transparent').";
+    }  
+ 
+    .fixed-header{
+      background-color: ".get_theme_mod('menuBackgroundColorScroll','#fff').";
     }
     .header-top.no-transparent{
       position:relative; 
-      background-color:".esc_attr(get_theme_mod('menuBackgroundColor','transparent')).";
+      background-color:".get_theme_mod('menuBackgroundColor','transparent').";
     }";
 
     /*Main logo height*/
     $theme_logo_height = (get_theme_mod('theme_logo_height'))?(get_theme_mod('theme_logo_height')):45;
-    $custom_css.= "#top-menu .logo img ,.header-top .logo img , #college_education_navigation .main-logo img{ max-height: ".esc_attr($theme_logo_height)."px;   }";
+    $custom_css.= ".header-top .logo img , #college_education_navigation .main-logo img{ max-height: ".esc_attr($theme_logo_height)."px;   }";
 
     if(get_theme_mod('theme_header_fix',0)){
       $custom_css.= ".header-top.fixed-header { position :fixed; } ";
@@ -784,116 +796,104 @@ function college_education_custom_css(){
       }
     
 
-    $custom_css.= "#top-menu, #top-menu ul, #top-menu ul li,#top-menu ul li a, #top-menu #menu-button,
-    #cssmenu, #cssmenu ul, #cssmenu ul li,#cssmenu ul li a,
-    #cssmenu #menu-button,.logo-light, .logo-light a {
-      color: ".esc_attr(get_theme_mod('menuTextColor','#fff')).";
-    }    
-    .fixed-header  #top-menu > ul > li > a,.fixed-header #top-menu  ul ul li  a,
-    .fixed-header #cssmenu > ul > li > a,.fixed-header #cssmenu ul ul li a,
-    .logo-dark a, .logo-dark{
-      color: ".esc_attr(get_theme_mod('menuTextColorScroll','#000'))."; 
-    }
-    #top-menu .menu-global{border-top: 2px solid ".esc_attr(get_theme_mod('menuTextColor','#fff'))."; }
-    #top-menu > ul > li:hover > a, #top-menu ul li.active a{border-top: 2px solid ".esc_attr(get_theme_mod('menuTextColor','#fff')).";}
-    .fixed-header #top-menu > ul > li:hover > a, .fixed-header #top-menu ul li.active a
-    {
-      color: ".esc_attr(get_theme_mod('menuTextColorScroll','#000')).";
-    }
-    .fixed-header  #top-menu .menu-global{border-top: 2px solid ".esc_attr(get_theme_mod('menuTextColorScroll','#000'))."; }
-
+    $custom_css.= ".logo-dark a, .logo-dark{
+      color: ".get_theme_mod('menuTextColorScroll','#000')."; 
+    }  
     *::selection,.silver-package-bg,#menu-line,.menu-left li:hover:before{
-      background-color: ".esc_attr(get_theme_mod('themeColor','#c1331b')).";
+      background-color: ".get_theme_mod('themeColor','#f1d927').";
     }
     .title-data h2 a,.btn-light:focus,.btn-light:hover,a:hover, a:focus,.package-feature h6,.menu-left h6,.sow-slide-nav a:hover .sow-sld-icon-themeDefault-left,.sow-slide-nav a:hover .sow-sld-icon-themeDefault-right, .menu-left ul li a:hover, .menu-left ul li.active a, .recentcomments:hover,.blog-carousel .blog-carousel-title h4,
     .gallery-item .ovelay .content .lightbox:hover, .gallery-item:hover .ovelay .content .imag-alt a:hover{
-      color: ".esc_attr(get_theme_mod('themeColor','#c1331b')).";
+      color: ".get_theme_mod('themeColor','#f1d927').";
     }
        
     .btn-blank{
-      box-shadow: inset 0 0 0 1px ".esc_attr(get_theme_mod('themeColor','#c1331b')).";
+      box-shadow: inset 0 0 0 1px ".get_theme_mod('themeColor','#f1d927').";
     }
     .btn-blank:hover:before, .btn-blank:focus:before, .btn-blank:active:before{
-      box-shadow: inset 10px 0 0 0px ".esc_attr(get_theme_mod('themeColor','#c1331b')).";
+      box-shadow: inset 10px 0 0 0px ".get_theme_mod('themeColor','#f1d927').";
     }
     .contact-me.darkForm input[type=submit],.contact-me.lightForm input[type=submit]:hover {
-      background: ".esc_attr(get_theme_mod('secondaryColor','#071414')).";
-      box-shadow: inset 10px 0 0 0px ".esc_attr(get_theme_mod('themeColor','#c1331b')).";
+      background: ".get_theme_mod('secondaryColor','#071414').";
+      box-shadow: inset 10px 0 0 0px ".get_theme_mod('themeColor','#f1d927').";
     }
     .btn-nav:focus, .btn-nav:hover,.menu-left li a:hover:before, .menu-left li.active:before, .services-tabs-left li:hover:before, .services-tabs-left li.active:before, ul#recentcomments li:hover:before,.btn-speechblue:before,.search-submit:hover, .search-submit:focus {
-      background: ".esc_attr(get_theme_mod('themeColor','#c1331b')).";
+      background: ".get_theme_mod('themeColor','#f1d927').";
     }
     .contact-me.lightForm input[type=submit],.contact-me.darkForm input[type=submit]:hover {
-      background: ".esc_attr(get_theme_mod('themeColor','#c1331b')).";
-      box-shadow: inset 10px 0 0 0px ".esc_attr(get_theme_mod('secondaryColor','#071414')).";
+      background: ".get_theme_mod('themeColor','#f1d927').";
+      box-shadow: inset 10px 0 0 0px ".get_theme_mod('secondaryColor','#071414').";
     }
     .menu-left ul li,.menu-left ul li span, body,.comment-form input, .comment-form textarea,input::-webkit-input-placeholder,textarea::-webkit-input-placeholder,time,.menu-left ul li a, .services-tabs-left li a, .menu-left ul li .comment-author-link a, .menu-left ul li.recentcomments a,caption{
-      color: ".esc_attr(get_theme_mod('bodyTextColor','#071414')).";
+      color: ".get_theme_mod('bodyTextColor','#424242').";
     }
     input:-moz-placeholder{
-      color: ".esc_attr(get_theme_mod('bodyTextColor','#071414')).";
+      color: ".get_theme_mod('bodyTextColor','#424242').";
     }
     input::-moz-placeholder{
-      color: ".esc_attr(get_theme_mod('bodyTextColor','#071414')).";
+      color: ".get_theme_mod('bodyTextColor','#424242').";
     }
     input:-ms-input-placeholder{
-      color: ".esc_attr(get_theme_mod('bodyTextColor','#071414')).";
+      color: ".get_theme_mod('bodyTextColor','#424242').";
     }
     a,.comment .comment-reply-link,.services-tabs-left li a:hover, .services-tabs-left li.active a{
-      color: ".esc_attr(get_theme_mod('secondaryColor','#071414')).";
+      color: ".get_theme_mod('secondaryColor','#071414').";
     }
-    .menu-left li:before,.menu-left h6::after,.btn-blank:hover:before, .btn-blank:focus:before, .btn-blank:active:before,.package-feature h6::after,.counter-box p:before,.menu-left li:before, .services-tabs-left li:before,.btn-blank:before,.search-submit{
-      background: ".esc_attr(get_theme_mod('secondaryColor','#071414')).";
+    .menu-left li:before,.menu-left h6::after,.btn-blank:hover:before, .btn-blank:focus:before, .btn-blank:active:before,.package-feature h6::after,.counter-box p:before,.menu-left li:before, .services-tabs-left li:before,.btn-blank:before,.search-submit, .widget-title-sidebar{
+      background: ".get_theme_mod('secondaryColor','#071414').";
     }
     .comment-form p.form-submit,.btn-speechblue{
-      background: ".esc_attr(get_theme_mod('secondaryColor','#071414')).";
-      box-shadow: inset 10px 0 0 0px ".esc_attr(get_theme_mod('themeColor','#c1331b')).";
+      background: ".get_theme_mod('secondaryColor','#071414').";
+      box-shadow: inset 10px 0 0 0px ".get_theme_mod('themeColor','#f1d927').";
     }
     .comment-form .form-submit:hover::before,.btn-speechblue:hover:before, .btn-speechblue:focus:before, .btn-speechblue:active:before{
-      box-shadow: inset 10px 0 0 0px ".esc_attr(get_theme_mod('secondaryColor','#071414')).";
-      background: ".esc_attr(get_theme_mod('themeColor','#c1331b')).";
+      box-shadow: inset 10px 0 0 0px ".get_theme_mod('secondaryColor','#071414').";
+      background: ".get_theme_mod('themeColor','#f1d927').";
     }
     .contact-me.darkForm input:focus, .contact-me.lightForm input:focus, .contact-me.darkForm textarea:focus, .contact-me.lightForm textarea:focus,
     blockquote,
     .comment-form input:focus, .comment-form textarea:focus{
-      border-color: ".esc_attr(get_theme_mod('themeColor','#c1331b')).";
-    }   
+      border-color: ".get_theme_mod('themeColor','#f1d927').";
+    }
+    .footer-wrap{
+      background: ".get_theme_mod('copyrightBackgroundColor','#071414').";
+    }
     .footer-box{
-      background:".esc_attr(get_theme_mod('footerBackgroundColor','#f9f5f1')).";
+      background:".get_theme_mod('footerBackgroundColor','#ffffff').";
     }
     .footer-box div,.footer-box .widget-title,.footer-box p,.footer-box .textwidget p,.footer-box div,.footer-box h1,.footer-box h2,.footer-box h3,.footer-box h4,.footer-box h5,.footer-box h6 {
-      color: ".esc_attr(get_theme_mod('footerTextColor','#ffffff')).";
+      color: ".get_theme_mod('footerTextColor','#ffffff').";
     }
     .footer-box .footer-widget ul li a,.footer-widget .tagcloud a{
-      color:".esc_attr(get_theme_mod('footerLinkColor','#ffffff')).";
+      color:".get_theme_mod('footerLinkColor','#ffffff').";
     }
     .footer-box .footer-widget ul li a:hover, .footer-widget .tagcloud a:hover{
-      color:".esc_attr(get_theme_mod('footerLinkHoverColor','#c1331b')).";
+      color:".get_theme_mod('footerLinkHoverColor','#f1d927').";
     }
     .footer-box .tagcloud > a:hover{
-      background:".esc_attr(get_theme_mod('footerLinkHoverColor','#c1331b')).";
+      background:".get_theme_mod('footerLinkHoverColor','#f1d927').";
     }
-    .footer-wrap .copyright p{
-      color: ".esc_attr(get_theme_mod('footerTextColor', '#ffffff')).";
+    .footer-wrap .copyright p,.footer-wrap{
+      color: ".get_theme_mod('footerTextColor', '#ffffff').";
     }
     .footer-wrap a,.footer-wrap.style2 .footer-nav ul li a{
-      color: ".esc_attr(get_theme_mod('footerLinkColor', '#ffffff')).";
+      color: ".get_theme_mod('footerLinkColor', '#ffffff').";
     }
     .footer-wrap .copyright a:hover,.footer-wrap a:hover,.footer-wrap.style2 .footer-nav ul li a:hover,.footer-wrap.style2 .copyright a:hover,.footer-wrap.style1 .copyright a:hover{
-      color: ".esc_attr(get_theme_mod('footerLinkHoverColor', '#c1331b')).";
+      color: ".get_theme_mod('footerLinkHoverColor', '#f1d927').";
     }
     
     /* Menu Css Cutomization */
     
       /*main top menu text color*/
 
-      #menu-style > ul > li > a {
+      #menu-style > ul > li > a{
         color: ".esc_attr(get_theme_mod('menuTextColor','#ffffff')).";
       }
 
       /*sub menu text color*/
 
-      #menu-style ul ul li a{
+      #menu-style ul ul li a {
         color: ".esc_attr(get_theme_mod('menuTextColor','#ffffff')).";
       }
 
@@ -912,81 +912,90 @@ function college_education_custom_css(){
       /*sub menu background color*/
 
       #menu-style ul ul li a{
-        background-color: ".esc_attr(get_theme_mod('secondaryColor','#071414')).";
+        background-color: ".get_theme_mod('secondaryColor','#071414').";
       }
 
       /*sub menu Scroll background color*/
 
       .fixed-header #menu-style ul ul li a {
-        background-color: ".esc_attr(get_theme_mod('menuBackgroundColorScroll','#ffffff')).";
+        background-color: ".get_theme_mod('menuBackgroundColorScroll','#ffffff').";
       } 
 
       /*sub menu background hover color*/
 
-      #menu-style ul ul li a:hover {
-        background-color: ".esc_attr(get_theme_mod('themeColor','#c1331b')).";
+      #menu-style ul ul li a:hover{
+        background-color: ".get_theme_mod('themeColor','#f1d927').";
       }      
 
       /*all top menu hover effect border color*/
 
-      #menu-style > ul > li::before, #menu-style > ul > li::after{
-           border-color: ".esc_attr(get_theme_mod('themeColor','#c1331b')).";
+      #menu-style > ul > li::before, #menu-style > ul > li::after  {
+           border-color: ".esc_attr(get_theme_mod('themeColor','#f1d927')).";
         }
 
-      
-      /*all menu arrow border color*/
+      /*all top menu hover effect border hover color*/
 
-      #menu-style > ul > li.has-sub > a::after, #menu-style ul ul li.has-sub > a::after {
+      #header-left-menu ul ul li a:hover, #header-left-menu > ul > li:hover > a, #header-left-menu ul li.active a
+        {
+           border-color: ".esc_attr(get_theme_mod('secondaryColor','#071414')).";
+        }
+
+       /*all menu arrow border color*/
+
+      #menu-style > ul > li.has-sub > a::after, #menu-style ul ul li.has-sub > a::after{
            border-color: ".esc_attr(get_theme_mod('menuTextColor','#ffffff')).";
         }
 
         /*all menu scroll arrow border color*/
 
-      .fixed-header #menu-style > ul > li.has-sub > a::after, .fixed-header #menu-style ul ul li.has-sub > a::after{
+      .fixed-header #menu-style > ul > li.has-sub > a::after, .fixed-header #menu-style ul ul li.has-sub > a::after {
            border-color: ".esc_attr(get_theme_mod('menuTextColorScroll','#000')).";
         }
 
-      @media only screen and (max-width: 1024px){
+      @media only screen and (max-width: 1024px)
+      {        
+        /*all menu arrow border color*/
+
+        #menu-style #menu-button::before, #menu-style .menu-opened::after {
+             border-color: ".get_theme_mod('menuTextColor','#ffffff').";
+          }
+
+        /*all menu scroll arrow border color*/
+
+        .fixed-header #menu-style #menu-button::before, .fixed-header #menu-style .menu-opened::after {
+             border-color: ".get_theme_mod('menuTextColorScroll','#000')." ;
+          }
+
+        /*all menu arrow background border color*/
         
-      /*all menu arrow border color*/
-      #menu-style #menu-button::before,#menu-style .menu-opened::after
-        {
-           border-color: ".esc_attr(get_theme_mod('menuTextColor','#ffffff')).";
-        }
+        #menu-style #menu-button::after{
+            background-color: ".get_theme_mod('menuTextColor','#ffffff').";
+          }
 
-      /*all menu scroll arrow border color*/
-      .fixed-header #menu-style #menu-button::before, .fixed-header #menu-style .menu-opened::after{
-           border-color: ".esc_attr(get_theme_mod('menuTextColorScroll','#000'))." ;
-        }
+        /*all menu scroll arrow background border color*/
+        
+        .fixed-header #menu-style #menu-button::after{
+            background-color: ".get_theme_mod('menuTextColorScroll','#000').";
+          } 
 
-      /*all menu arrow background border color*/      
-      #menu-style #menu-button::after{
-          background-color: ".esc_attr(get_theme_mod('menuTextColor','#ffffff')).";
-        }
+        /*mobile menu background color*/
 
-      /*all menu scroll arrow background border color*/      
-      .fixed-header #menu-style #menu-button::after {
-          background-color: ".esc_attr(get_theme_mod('menuTextColorScroll','#000')).";
-        } 
+        #menu-style .mobilemenu li a {
+             background-color: ".get_theme_mod('menuBackgroundColorScroll','#ffffff').";
+             color: ".esc_attr(get_theme_mod('menuTextColorScroll','#000')).";
+          }
 
-      /*mobile menu background color*/
-      #menu-style .mobilemenu li a
-        {
-           background-color: ".esc_attr(get_theme_mod('menuBackgroundColorScroll','#ffffff')).";
-           color: ".esc_attr(get_theme_mod('menuTextColorScroll','#000')).";
-        }
+          #menu-style .mobilemenu li a:hover{
+             background-color: ".get_theme_mod('themeColor','#f1d927').";
+          }
 
-        #menu-style .mobilemenu li a:hover{
-           background-color: ".esc_attr(get_theme_mod('themeColor','#c1331b')).";
-        }
-
-        #menu-style .mobilemenu li:hover > a{
-           background-color: ".esc_attr(get_theme_mod('themeColor','#c1331b')).";
-        }       
-
-        #menu-style .submenu-button::before, #menu-style .submenu-button::after {
-           background-color: ".esc_attr(get_theme_mod('menuTextColorScroll','#000')).";
-        }    
+          #menu-style .mobilemenu li:hover > a{
+             background-color: ".get_theme_mod('themeColor','#f1d927').";
+          }
+       
+          #menu-style .submenu-button::before, #menu-style .submenu-button::after {
+             background-color: ".get_theme_mod('menuTextColorScroll','#000').";
+          }       
 
       }   
       /*  Menu Css Cutomization */

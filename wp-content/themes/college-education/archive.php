@@ -9,7 +9,8 @@ if( $pagetitle == 1 ): ?>
 <div class="heading-wrap blog-heading-wrap">
     <div class="heading-layer">
         <div class="heading-title">
-            <h4> <?php esc_html_e('Archive ','college-education'); the_archive_title(); ?> </h4>
+        	<!-- esc_html_e('Archive ','college-education'); -->
+            <h4> <?php  the_archive_title(); ?> </h4>
         </div>
     </div>
 </div>

@@ -18,6 +18,8 @@
  * @package WordPress
  */
 
+define('WP_CACHE', true);
+define( 'WPCACHEHOME', '/home/biomass/biomass-sjtu/wp-content/plugins/wp-super-cache/' );
 define('FS_METHOD', 'direct');
 
 // ** MySQL settings - You can get this info from your web host ** //
